@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const identifierInput = document.getElementById('identifier_enter')
     const messageDiv = document.getElementById('plain-text')
     const messageInput = document.getElementById('message_enter')
+    const locale = document.getElementById('locale');
+    const localeInput = document.getElementById('locale_enter');
 
     apiSelect.addEventListener('change', function () {
         console.log('API Selection updated to:', this.value);
@@ -60,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let input_value = '';
             dynamicInputsContainer.classList.remove('hidden');
             dynamicProjectsContainer.classList.remove('hidden');
+            locale.classList.remove('hidden')
             document.getElementById("extra-selections").innerText = 'Variables';
             document.getElementById("input-group-1").innerHTML = `
             <input type="text" class="form-control" placeholder="Variable name" id="input-name">
@@ -110,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const apiType = apiSelect.value.trim();
         const requestType = requestSelect.value.trim();
         const messageContents = messageInput.value.trim();
+        const localeValue = localeInput.value.trim();
 
         const dynamicInputs = document.querySelectorAll('#input-boxes-container .input-group');
         const inputValues = [];
@@ -146,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
             apiType,
             requestType,
             messageContents,
+            localeValue,
             inputs: inputValues,
             projects: projectValues,
         };
@@ -154,72 +159,97 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function postForm() {
         const formDetails = record_values();
-
+    
         console.log('Form Details:', formDetails);
-        if (formDetails.apiType === 'channels' && formDetails.requestType != 'WA_template_variable' && formDetails.requestType != 'SMS_template' ){
-        try {
-            const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${formDetails.apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                        "receiver": {
-                        "contacts": [
-                            {
-                                "identifierValue": `${formDetails.identifierValue}`
-                             }
-                                    ]
-                                    },
-                        "body":  {
-                         "type": "text",
-                        "text": {
-                                    "text": `${formDetails.messageContents}`
-                                }
-                                    }
+    
+        if (formDetails.apiType === 'channels' && formDetails.requestType != 'WA_template_variable' && formDetails.requestType != 'SMS_template') {
+            try {
+                const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${formDetails.apiKey}`,
+                        'Content-Type': 'application/json'
                     },
-                )
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+                    body: JSON.stringify({
+                        "receiver": {
+                            "contacts": [
+                                {
+                                    "identifierValue": `${formDetails.identifierValue}`
+                                }
+                            ]
+                        },
+                        "body": {
+                            "type": "text",
+                            "text": {
+                                "text": `${formDetails.messageContents}`
+                            }
+                        }
+                    })
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+    
+                const data = await response.json();
+                console.log('Success:', data);
+            } catch (error) {
+                console.error('Error:', error);
             }
-
-            const data = await response.json();
-            console.log('Success:', data);
-        } catch (error) {
-            console.error('Error:', error);
+        } else if (
+            formDetails.apiType === 'channels' &&
+            (formDetails.requestType === 'WA_template_variable' || formDetails.requestType === 'SMS_template')
+        ) {
+            if (formDetails.projects.length > 0) {
+                try {
+                    for (const project of formDetails.projects) {
+                        const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${formDetails.apiKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                "receiver": {
+                                    "contacts": [
+                                        {
+                                            "identifierValue": `${formDetails.identifierValue}`
+                                        }
+                                    ]
+                                },
+                                "template": {
+                                    "projectId": `${project.projectID}`, // Use 'project' instead of 'projectValue'
+                                    "version": `${project.versionID}`,   // Use 'project' instead of 'projectValue'
+                                    "locale": `${formDetails.localeValue}`,
+                                    "parameters": [
+                                        {
+                                            "type": "string",
+                                            "key": `${formDetails.inputs[0].input1}`, // Correctly reference input values
+                                            "value": `${formDetails.inputs[0].input2}` // Correctly reference input values
+                                        }
+                                    ]
+                                }
+                            })
+                        });
+    
+                        if (!response.ok) {
+                            /*throw new Error('Network response was not ok');*/
+                            console.log(project.projectID, project.versionID, formDetails.localeValue, formDetails.inputs[0].input1, formDetails.inputs[0].input2, formDetails.identifierValue, formDetails.apiKey, formDetails.channelId, formDetails.workspaceId);
+                        }
+    
+                        const data = await response.json();
+                        console.log('Success:', data);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            } else {
+                console.log('No project values provided.');
+            }
+        } else {
+            console.log('Awaiting API updates');
         }
-    } else{
-        console.log('Need to update for different requests', apiSelect, requestSelect)
     }
-        
-    }
-
+    
     document.getElementById('submit').addEventListener('click', postForm);
-});
-const apiUrls = {
-    "channels": [
-        { WA_plain_text: "https://api.example.com/channels/get", text: "Send Plain text WA message to channel" },
-        { WA_plain_template: "https://api.example.com/channels/create", text: "Send plain text WA template to channel" },
-        { WA_with_buttons: "https://api.example.com/channels/delete", text: "Send plain WA message with buttons" },
-        { WA_template_variable: "https://api.example.com/channels/delete", text: "Send WA image with variable" },
-        { WA_template_media: "https://api.example.com/channels/delete", text: "Send WA media templateo channel" },
-        { SMS_image_text: "https://api.example.com/channels/delete", text: "Send SMS message with image and text" },
-        { SMS_file: "https://api.example.com/channels/delete", text: "Send SMS message with a file" },
-        { SMS_template: "https://api.example.com/channels/delete", text: "Send an SMS message with a template" }
-    ],
-    "contacts": [
-        { list_contacts: "https://api.example.com/contacts/get", text: "List contacts" },
-        { create_contact: "https://api.example.com/contacts/add", text: "Create contact" },
-        { get_contact: "https://api.example.com/contacts/add", text: "Get Contact" },
-        { delete_contact: "https://api.example.com/contacts/add", text: "Delete contact" },
-        { update_contact: "https://api.example.com/contacts/remove", text: "Create or update contact" }
-    ],
-    "webhooks": [
-        { create_webhook: "https://api.example.com/numbers/list", text: "Create a webhook" },
-        { list_webhooks: "https://api.example.com/numbers/allocate", text: "List webhook events" },
-        { delete_webhook: "https://api.example.com/numbers/release", text: "Delete a webhook subscription" }
-    ]
-};
+})
