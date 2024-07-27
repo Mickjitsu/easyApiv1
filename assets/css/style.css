@@ -55,6 +55,6 @@
 .width-select{
   width: 100px;
 }
-#project-group-1{
+#project-group-1, #identifier-group{
   display: flex;
 }

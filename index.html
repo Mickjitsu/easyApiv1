@@ -84,6 +84,20 @@
                             <small id="ORGANIZATION_ID" class="form-text">Enter your Organization ID</small>
                         </div>
                     </div>
+                    <div class="row mb-3 hidden" id="identifier-group">
+                        <label for="identifier" class="col-2 form-label">Identifier value for sending messages to channel</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="identHelp" placeholder="Enter the contact Identifier(phone or email)" id="identifier_enter" name="identifier">
+                            <small id="identifier_id" class="form-text">Enter the contact identifier</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3 hidden" id="plain-text">
+                        <label for="plain-message" class="col-2 form-label">Enter the message you want to send</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="messageHelp" placeholder="Enter the message you want to send" id="message_enter" name="send-message">
+                            <small id="send-message-id" class="form-text">Enter the message you want to send</small>
+                        </div>
+                    </div>
                     <div class="row mb-3 hidden" id="dynamic-inputs-container">
                         <label class="col-2 form-label" id="extra-selections">Extra Inputs:</label>
                         <div class="col-6" id="input-boxes-container">

@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const addInputsBtn = document.getElementById('add-inputs-btn');
     const inputBoxesContainer = document.getElementById('input-boxes-container');
     let inputGroupCount = 1;
+    const identifierType = document.getElementById('identifier-group')
+    const identifierInput = document.getElementById('identifier_enter')
+    const messageDiv = document.getElementById('plain-text')
+    const messageInput = document.getElementById('message_enter')
 
     apiSelect.addEventListener('change', function () {
         console.log('API Selection updated to:', this.value);
@@ -18,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function requestSelector(selectedApi) {
         if (selectedApi === 'channels') {
+            identifierType.classList.remove('hidden');
             requestSelect.innerHTML = `
             <option value="WA_plain_text">Send WA plain text template</option>
             <option value="WA_plain_template">Send WA plain template to channel</option>
@@ -50,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     requestSelect.addEventListener('change', function () {
         const chosenRequest = this.value;
-        if (chosenRequest === 'WA_template_variable') {
+        if (chosenRequest === 'WA_template_variable' || chosenRequest === 'SMS_template') {
             let input_name = '';
             let input_value = '';
             dynamicInputsContainer.classList.remove('hidden');
@@ -62,7 +67,11 @@ document.addEventListener('DOMContentLoaded', function () {
             input_name = 'Variable Name';
             input_value = 'Variable Value';
             inputButtonAddition(input_name, input_value);
-        } else {
+        }
+        else if(chosenRequest === 'WA_plain_text' || chosenRequest === 'SMS'){
+            messageDiv.classList.remove('hidden')
+        } 
+        else {
             dynamicInputsContainer.classList.add('hidden');
             dynamicProjectsContainer.classList.add('hidden');
         }
@@ -97,6 +106,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const workspaceId = workspace_id_input.value.trim();
         const channelId = channel_id_input.value.trim();
         const organizationId = organization_id_input.value.trim();
+        const identifierValue = identifierInput.value.trim();
+        const apiType = apiSelect.value.trim();
+        const requestType = requestSelect.value.trim();
+        const messageContents = messageInput.value.trim();
 
         const dynamicInputs = document.querySelectorAll('#input-boxes-container .input-group');
         const inputValues = [];
@@ -129,8 +142,12 @@ document.addEventListener('DOMContentLoaded', function () {
             workspaceId,
             channelId,
             organizationId,
+            identifierValue,
+            apiType,
+            requestType,
+            messageContents,
             inputs: inputValues,
-            projects: projectValues
+            projects: projectValues,
         };
         return formDetails;
     };
@@ -139,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const formDetails = record_values();
 
         console.log('Form Details:', formDetails);
-
+        if (formDetails.apiType === 'channels' && formDetails.requestType != 'WA_template_variable' && formDetails.requestType != 'SMS_template' ){
         try {
             const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
                 method: 'POST',
@@ -151,14 +168,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         "receiver": {
                         "contacts": [
                             {
-                                "identifierValue": "+34680639505"
+                                "identifierValue": `${formDetails.identifierValue}`
                              }
                                     ]
                                     },
                         "body":  {
                          "type": "text",
                         "text": {
-                                    "text": "Single text message"
+                                    "text": `${formDetails.messageContents}`
                                 }
                                     }
                     },
@@ -174,6 +191,10 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Error:', error);
         }
+    } else{
+        console.log('Need to update for different requests', apiSelect, requestSelect)
+    }
+        
     }
 
     document.getElementById('submit').addEventListener('click', postForm);
