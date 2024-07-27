@@ -55,3 +55,6 @@
 .width-select{
   width: 100px;
 }
+#project-group-1{
+  display: flex;
+}

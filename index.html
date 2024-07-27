@@ -49,7 +49,6 @@
                         <div class="col-6">
                             <select class="form-control" aria-describedby="requestHelp" id="request" name="request">
                                 <option value="" disabled selected>Choose the reqeust you want to make</option>
-                                <!-- Options will be populated dynamically -->
 
                             </select>
                             <small id="urlHelp" class="form-text">
@@ -94,6 +93,15 @@
                             </div>
                         </div>
                         <button type="button" class="btn btn-primary width-select" id="add-inputs-btn">Add More</button>
+                    </div>
+                    <div class="row mb-3 hidden" id="dynamic-projects-container">
+                        <label class="col-2 form-label" id="project-selections">Project</label>
+                        <div class="col-6" id="project-boxes-container">
+                            <div class="project-group mb-2" id="project-group-1">
+                                <input type="text" class="form-control" placeholder="Enter Project ID" id="project-name">
+                                <input type="text" class="form-control" placeholder="Enter version ID or 'latest'" id="project-version">
+                            </div>
+                        </div>
                     </div>
                     <div class="row mb-3">
                         <label for="code" class="col-2 form-label">Code:</label>
