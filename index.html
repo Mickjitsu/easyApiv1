@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <title>Easy API - Bird Support</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-10">
+                <h2>Easy API - Bird Support</h2>
+            </div>
+            <div class="col-md-2 text-end">
+                <button id="status" class="btn btn-secondary">Check Key</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col"><hr></div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <form id="checksform">
+                    <div class="row mb-3">
+                        <label for="api" class="col-2 form-label">API:</label>
+                        <div class="col-6">
+                            <select class="form-control" aria-describedby="apiHelp" id="api" name="api">
+                                <option value="" disabled selected>Select an API</option>
+                                <option value="channels">Channels API</option>
+                                <option value="contacts">Contacts API</option>
+                                <option value="webhooks">Webhooks</option>
+                                <option value="reporting">Reporting API</option>
+                                <option value="accounts">Accounts API</option>
+                                <option value="voice">Voice API</option>
+                            </select>
+                            <small id="apiHelp" class="form-text">
+                                Choose the API you want to use
+                            </small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="request" class="col-2 form-label">Request to make:</label>
+                        <div class="col-6">
+                            <select class="form-control" aria-describedby="requestHelp" id="request" name="request">
+                                <option value="" disabled selected>Choose the reqeust you want to make</option>
+                                <!-- Options will be populated dynamically -->
+
+                            </select>
+                            <small id="urlHelp" class="form-text">
+                                Select the api request you want to make.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="API_KEY" class="col-2 form-label">API-KEY:</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="enterApiKey" placeholder="Enter API KEY" id="api_key_enter" name="api">
+                            <small id="API_KEY" class="form-text">Enter your API key</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="workspace" class="col-2 form-label">WorkspaceID</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="workspaceHelp" placeholder="Enter the workspace ID" id="workspace_enter" name="workspace">
+                            <small id="WORKSPACE_ID" class="form-text">Enter your workspace ID</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="channel" class="col-2 form-label">Channel ID(if using the channelsAPI)</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="channelHelp" placeholder="Enter the workspace ID" id="channel_enter" name="workspace">
+                            <small id="CHANNEL_ID" class="form-text">Enter your channel ID</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="organization" class="col-2 form-label">Organisation ID(if using ... API)</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="orgHelp" placeholder="Enter the Organization ID" id="organization_enter" name="organization">
+                            <small id="ORGANIZATION_ID" class="form-text">Enter your Organization ID</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3 hidden" id="dynamic-inputs-container">
+                        <label class="col-2 form-label" id="extra-selections">Extra Inputs:</label>
+                        <div class="col-6" id="input-boxes-container">
+                            <div class="input-group mb-2" id="input-group-1">
+                                <input type="text" class="form-control" placeholder="Enter value 1" id="input-name">
+                                <input type="text" class="form-control" placeholder="Enter value 2" id="input-value">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary width-select" id="add-inputs-btn">Add More</button>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="code" class="col-2 form-label">Code:</label>
+                        <div class="col-8">
+                            <textarea class="form-control" id="code" name="code"></textarea><br>
+                        </div>
+                    </div>
+                </form>
+                <button class="btn btn-primary text-start" id="submit">Run Checks</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 1 -->
+    <div class="modal" id="resultsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resultsModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="results-content">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+        crossorigin="anonymous"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+
+</html>
