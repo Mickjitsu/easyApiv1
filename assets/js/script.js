@@ -218,14 +218,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ]
                                 },
                                 "template": {
-                                    "projectId": `${project.projectID}`, // Use 'project' instead of 'projectValue'
-                                    "version": `${project.versionID}`,   // Use 'project' instead of 'projectValue'
+                                    "projectId": `${project.projectID}`, 
+                                    "version": `${project.versionID}`,   
                                     "locale": `${formDetails.localeValue}`,
                                     "parameters": [
                                         {
                                             "type": "string",
-                                            "key": `${formDetails.inputs[0].input1}`, // Correctly reference input values
-                                            "value": `${formDetails.inputs[0].input2}` // Correctly reference input values
+                                            "key": `${formDetails.inputs[0].input1}`, 
+                                            "value": `${formDetails.inputs[0].input2}` 
                                         }
                                     ]
                                 }
@@ -233,8 +233,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
     
                         if (!response.ok) {
-                            /*throw new Error('Network response was not ok');*/
-                            console.log(project.projectID, project.versionID, formDetails.localeValue, formDetails.inputs[0].input1, formDetails.inputs[0].input2, formDetails.identifierValue, formDetails.apiKey, formDetails.channelId, formDetails.workspaceId);
+                            throw new Error('Network response was not ok');
+                            
                         }
     
                         const data = await response.json();
