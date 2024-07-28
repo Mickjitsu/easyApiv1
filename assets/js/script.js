@@ -188,14 +188,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             inputValues.push(values);
         });
-        contactAttributes.forEach(group =>{
-            const attributes = group.querySelectorAll('input');
-            const attValues = {
-                input: inputs[0].value.trim(),
-                input2: inputs[1].value.trim
-            };
-            attributes.push(attValues);
-        })
         const dynamicProjects = document.querySelectorAll('#project-boxes-container .project-group');
         const projectValues = [];
 
@@ -321,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             else if(formDetails.requestType === 'create_contact') {
-                console.log(formDetails.inputs.inputValues);
+                console.log('Awaiting API updates');
             }
             else {
                 console.log('No project values provided.');
