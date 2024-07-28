@@ -12,6 +12,7 @@
 </head>
 
 <body>
+    <form>
     <div class="container">
         <div class="row">
             <div class="col-md-10">
@@ -105,6 +106,91 @@
                             <small id="send-message-id" class="form-text">Enter the message you want to send</small>
                         </div>
                     </div>
+                    <div class="row mb-3 hidden" id="contact-div">
+                        <label for="contact-id" class="col-2 form-label">Enter the contact ID</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="contactHelp" placeholder="Enter the message you want to send" id="contact-enter" name="contact-id-name">
+                            <small id="user-contact-id" class="form-text">Enter the contact ID</small>
+                        </div>
+                    </div>
+                    <div id="contact-attr-div" class="hidden">
+                    <div class="row mb-3">
+                        <label for="contact-identifier" class="col-2 form-label">Contact identifier</label>
+                        <div class="col-6">
+                            <select class="form-control" aria-describedby="contacttHelp" id="contact-key-enter" name="contact-identifier-name">
+                                <option value="email">Email Address</option>
+                                <option value="phonenumber">Phone Number</option>
+                            </select>
+                            <small id="urlHelp" class="form-text">
+                                Choose the contact identifier key
+                            </small>
+                        </div>
+                    </div>
+                    <div class="row mb-3" id="contact-identifier-value">
+                        <label for="contact-ident-value" class="col-2 form-label">Enter the contact identifier value</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="contactHelp" placeholder="Enter the contact identifier value" id="contact-value-enter" name="contact-identifier-name">
+                            <small id="contact-value-id" class="form-text">Enter the contact identifier value</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3" id="dynamic-inputs-container-contacts">
+                        <label class="col-2 form-label" id="contact-extra-selections">Extra Inputs:</label>
+                        <div class="col-6" id="contact-input-boxes-container">
+                            <div class="input-group mb-2" id="input-group-1-contacts">
+                                <input type="text" class="form-control" placeholder="Enter value 1" id="contact-input-name">
+                                <input type="text" class="form-control" placeholder="Enter value 2" id="contact-input-value">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary width-select" id="add-inputs-btn">Add More</button>
+                    </div>
+                    </div>
+                    <div class="row mb-3 hidden" id="webhook-div">
+                        <label for="webhook-id" class="col-2 form-label">Enter the webhook ID</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="webhookHelp" placeholder="Enter the webhook ID" id="webhook-enter" name="webhook-id-name">
+                            <small id="cust-webhook-id" class="form-text">Only for get, update and delete webhook subscription requests</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3 hidden" id="webhook-atr-div">
+                        <div class="row mb-3">
+                            <label for="webhook-attributes-signing" class="col-2 form-label">Signing Key</label>
+                            <div class="col-6">
+                                <input class="form-control" aria-describedby="webhookAtr" placeholder="Enter the Signing key (if applicable)" id="webhook-signing-enter" name="webhook-atrs-name">
+                                <small id="cust-webhook-id" class="form-text">Enter the signing key (only if applicable by the customer)</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="webhook-attributes-event" class="col-2 form-label">Webhook event</label>
+                            <div class="col-6">
+                                <input class="form-control" aria-describedby="webhookAtr" placeholder="Enter the webhook event (whatsapp.inbound, sms.outbound etc)" id="webhook-event-enter" name="webhook-event-name">
+                                <small id="cust-webhook-event" class="form-text">Enter the webhook event (whatsapp.inbound, sms.outbound etc)</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="webhook-service" class="col-2 form-label">Webhook service</label>
+                            <div class="col-6">
+                                <input class="form-control" aria-describedby="webhookAtr" placeholder="Enter the webhook service (channels, reporting etc)" id="webhook-service-enter" name="webhook-service-name">
+                                <small id="cust-webhook-service" class="form-text">Enter the webhook service (channels, reporting etc)</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="webhook-event-filters" class="col-2 form-label">Webhook event filters (key, value)</label>
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <input class="form-control" aria-describedby="webhookAtr" placeholder="Enter the webhook event filter key (channelId or associated ID name)" id="webhook-event-filter-key" name="webhook-event-key-name">
+                                    <input class="form-control" aria-describedby="webhookAtr" placeholder="Enter the webhook event filter value (actual value of the event filter key ID)" id="webhook-event-filter-value" name="webhook-event-value-name">
+                                </div>
+                                <small id="cust-webhook-event-filters" class="form-text">Enter the webhook event filter key and value (ID type and ID value)</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="webhook-url" class="col-2 form-label">Webhook URL</label>
+                            <div class="col-6">
+                                <input class="form-control" aria-describedby="webhookAtr" placeholder="Enter the webhook URL" id="webhook-url-enter" name="webhook-url-name">
+                                <small id="cust-webhook-url" class="form-text">Enter the webhook URL</small>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row mb-3 hidden" id="dynamic-inputs-container">
                         <label class="col-2 form-label" id="extra-selections">Extra Inputs:</label>
                         <div class="col-6" id="input-boxes-container">
@@ -134,7 +220,6 @@
                 <button class="btn btn-primary text-start" id="submit">Run Checks</button>
             </div>
         </div>
-    </div>
 
     <!-- Modal 1 -->
     <div class="modal" id="resultsModal" tabindex="-1">

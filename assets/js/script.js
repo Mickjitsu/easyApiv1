@@ -16,6 +16,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageInput = document.getElementById('message_enter')
     const locale = document.getElementById('locale');
     const localeInput = document.getElementById('locale_enter');
+    const contactDiv = document.getElementById('contact-div');
+    const contactInput = document.getElementById('contact-enter');
+    const webhookDiv = document.getElementById('webhook-div');
+    const webhookInput = document.getElementById('webhook-enter');
+    const webhookAtrDiv = document.getElementById('webhook-atr-div');
+    const webhookSignInput = document.getElementById('webhook-signing-enter');
+    const webhookEventInput = document.getElementById('webhook-event-enter');
+    const webhookServiceInput = document.getElementById('webhook-service-enter');
+    const webhookFilterKey = document.getElementById('webhook-event-filter-key');
+    const webhookFilterValue = document.getElementById('webhook-event-filter-value');
+    const webhookUrl = document.getElementById('webhook-url-enter');
+    const contactIdentDiv = document.getElementById('contact-attr-div');
+    const dynamicContAttDiv = document.getElementById('dynamic-inputs-container-contacts');
+    const contactAttKeyInput= document.getElementById('contact-input-name')
+    const contAttValInput = document.getElementById('contact-input-value')
+
 
     apiSelect.addEventListener('change', function () {
         console.log('API Selection updated to:', this.value);
@@ -39,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <option value="SMS_template">Send SMS template</option>`;
         } else if (selectedApi === 'contacts') {
             requestSelect.innerHTML = `
+            <option value="" disabled selected>Choose Contact API Request</option>
             <option value="list_contacts">List contacts</option>
             <option value="create_contact">Create Contact</option>
             <option value="get_contact">Get contact</option>
@@ -46,9 +63,12 @@ document.addEventListener('DOMContentLoaded', function () {
             <option value="update_contact">Create or Update contact by identifier</option>`;
         } else if (selectedApi === 'webhooks') {
             requestSelect.innerHTML = `
+            <option value="" disabled selected>Choose webhook subscription request</option>
             <option value="create_webhook">Create Subscription</option>
             <option value="list_webhooks">List webhook events</option>
-            <option value="delete_webhook">Delete Subscription</option>`;
+            <option value="delete_webhook">Delete Subscription</option>
+            <option value="get_webhook">Get webhook Subscription</option>
+            <option value="update_webhook">Update webhook Subscription</option>`;
         } else {
             requestSelect.innerHTML = `
             <option value="" disabled selected>Functionality coming soon</option>`;
@@ -74,9 +94,50 @@ document.addEventListener('DOMContentLoaded', function () {
         else if(chosenRequest === 'WA_plain_text' || chosenRequest === 'SMS'){
             messageDiv.classList.remove('hidden')
         } 
+        else if(chosenRequest === "get_contact" || chosenRequest === "delete_contact"){
+            contactDiv.classList.remove('hidden');
+            contactIdentDiv.classList.add('hidden');
+        }
+        else if(chosenRequest === "create_contact"){
+            let attribute_key = '';
+            let attribute_value = '';
+            contactIdentDiv.classList.remove('hidden');
+            document.getElementById("contact-extra-selections").innerText = 'Attributes';
+            document.getElementById("input-group-1-contacts").innerHTML = `
+            <input type="text" class="form-control" placeholder="Attribute key" id="attribute-name">
+            <input type="text" class="form-control" placeholder="Attribute value" id="attribute-value">`;
+            attribue_key = 'Attribute Key';
+            attribute_value = 'Attribute Value';
+            inputButtonAddition(attribute_key, attribute_value);
+        }
+        else if(chosenRequest === "update_contact"){
+            contactIdentDiv.classList.remove('hidden');
+            contactDiv.classList.remove('hidden');
+            let attribute_key = '';
+            let attribute_value = '';
+            contactIdentDiv.classList.remove('hidden');
+            document.getElementById("extra-selections").innerText = 'Attributes';
+            document.getElementById("input-group-1").innerHTML = `
+            <input type="text" class="form-control" placeholder="Attribute key" id="attribute-name">
+            <input type="text" class="form-control" placeholder="Attribute value" id="attribute-value">`;
+            attribue_key = 'Attribute Key';
+            attribute_value = 'Attribute Value';
+            inputButtonAddition(attribute_key, attribute_value);
+        }
+        else if(chosenRequest === "get_webhook" || chosenRequest === "delete_webhook"){
+            webhookDiv.classList.remove('hidden')
+            webhookAtrDiv.classList.add('hidden')
+        }
+        else if(chosenRequest === "update_webhook" || chosenRequest === "create_webhook"){
+            webhookDiv.classList.remove('hidden')
+            webhookAtrDiv.classList.remove('hidden')
+        }
         else {
             dynamicInputsContainer.classList.add('hidden');
             dynamicProjectsContainer.classList.add('hidden');
+            contactDiv.classList.add('hidden');
+            webhookDiv.classList.add('hidden');
+            webhookAtrDiv.classList.add('hidden')
         }
     });
 
@@ -114,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const requestType = requestSelect.value.trim();
         const messageContents = messageInput.value.trim();
         const localeValue = localeInput.value.trim();
+        const contactId = contactInput.value.trim();
 
         const dynamicInputs = document.querySelectorAll('#input-boxes-container .input-group');
         const inputValues = [];
@@ -126,7 +188,14 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             inputValues.push(values);
         });
-
+        contactAttributes.forEach(group =>{
+            const attributes = group.querySelectorAll('input');
+            const attValues = {
+                input: inputs[0].value.trim(),
+                input2: inputs[1].value.trim
+            };
+            attributes.push(attValues);
+        })
         const dynamicProjects = document.querySelectorAll('#project-boxes-container .project-group');
         const projectValues = [];
 
@@ -151,6 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
             requestType,
             messageContents,
             localeValue,
+            contactId,
             inputs: inputValues,
             projects: projectValues,
         };
@@ -158,7 +228,9 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     async function postForm() {
+        event.preventDefault()
         const formDetails = record_values();
+        let requestBody = {}
     
         console.log('Form Details:', formDetails);
     
@@ -201,6 +273,12 @@ document.addEventListener('DOMContentLoaded', function () {
             (formDetails.requestType === 'WA_template_variable' || formDetails.requestType === 'SMS_template')
         ) {
             if (formDetails.projects.length > 0) {
+                formDetails.inputs.forEach(input => {
+                    if (input.input1 && input.input2) {
+                        requestBody[input.input1] = input.input2;
+                    }
+                });
+                console.log('Dynamic Request Body:', requestBody)
                 try {
                     for (const project of formDetails.projects) {
                         const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
@@ -221,13 +299,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                     "projectId": `${project.projectID}`, 
                                     "version": `${project.versionID}`,   
                                     "locale": `${formDetails.localeValue}`,
-                                    "parameters": [
-                                        {
-                                            "type": "string",
-                                            "key": `${formDetails.inputs[0].input1}`, 
-                                            "value": `${formDetails.inputs[0].input2}` 
-                                        }
-                                    ]
+                                    "parameters": Object.entries(requestBody).map(([key, value]) => ({
+                                    "type": "string",
+                                    "key": key,
+                                    "value": value
+                                }))
                                 }
                             })
                         });
@@ -243,7 +319,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 } catch (error) {
                     console.error('Error:', error);
                 }
-            } else {
+            }
+            else if(formDetails.requestType === 'create_contact') {
+                console.log(formDetails.inputs.inputValues);
+            }
+            else {
                 console.log('No project values provided.');
             }
         } else {
