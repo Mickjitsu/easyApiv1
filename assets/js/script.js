@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const dynamicContAttDiv = document.getElementById('contact-input-boxes-container');
     const contactAttKeyInput= document.getElementById('contact-input-name');
     const contAttValInput = document.getElementById('contact-input-value');
+    const waMediaDiv = document.getElementById("media-div");
+    const waMediaInput = document.getElementById('media_enter');
+    const mediaType = document.getElementById('media-type');
 
     apiSelect.addEventListener('change', function () {
         console.log('API Selection updated to:', this.value);
@@ -44,7 +47,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selectedApi === 'channels') {
             identifierType.classList.remove('hidden');
             requestSelect.innerHTML = `
-            <option value="WA_plain_text">Send WA plain text template</option>
+            <option value="" disabled selected>Choose Channels API request</option>
+            <option value="WA_plain_text">Send WA plain text message</option>
             <option value="WA_plain_template">Send WA plain template to channel</option>
             <option value="WA_with_buttons">Send WA message with buttons</option>
             <option value="WA_template_variable">Send WA plain template with variable</option>
@@ -95,6 +99,10 @@ document.addEventListener('DOMContentLoaded', function () {
         else if(chosenRequest === 'WA_plain_text' || chosenRequest === 'SMS'){
             messageDiv.classList.remove('hidden')
         } 
+        else if(chosenRequest === 'WA_plain_template' && chosenRequest != 'Wa_plain_text'){
+            dynamicProjectsContainer.classList.remove('hidden');
+            locale.classList.remove('hidden');
+        }
         else if(chosenRequest === "get_contact" || chosenRequest === "delete_contact"){
             contactDiv.classList.remove('hidden');
             contactIdentDiv.classList.add('hidden');
@@ -110,6 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
             input_name = 'Attribute Key';
             input_value = 'Attribute Value';
         
+        }
+        else if(chosenRequest === 'WA_template_media'){
+            waMediaDiv.classList.remove('hidden');
+            dynamicProjectsContainer.classList.remove('hidden');
+            locale.classList.remove('hidden');
         }
         else if(chosenRequest === "update_contact"){
             contactIdentDiv.classList.remove('hidden');
@@ -196,6 +209,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const contactId = contactInput.value.trim();
         const contactIdentifierKey = contactIdentKey.value.trim();
         const contactIdentifierValue = contactIdentValue.value.trim();
+        const waMediaUrl = waMediaInput.value.trim();
+        const mediaTypeSelection = mediaType.value.trim()
 
         const dynamicInputs = document.querySelectorAll('#input-boxes-container .input-group');
         const inputValues = [];
@@ -248,6 +263,8 @@ document.addEventListener('DOMContentLoaded', function () {
             contactId,
             contactIdentifierKey,
             contactIdentifierValue,
+            waMediaInput,
+            mediaTypeSelection,
             inputs: inputValues,
             projects: projectValues,
             contacts: contactAttValues
@@ -262,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
         console.log('Form Details:', formDetails);
     
-        if (formDetails.apiType === 'channels' && formDetails.requestType != 'WA_template_variable' && formDetails.requestType != 'SMS_template') {
+        if (formDetails.apiType === 'channels' && (formDetails.requestType === 'WA_plain_text' || formDetails.requestType === 'SMS')) {
             try {
                 const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
                     method: 'POST',
@@ -296,10 +313,54 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (error) {
                 console.error('Error:', error);
             }
-        } else if (
+        }
+        /*----------------------------------------------*/
+        else if (
             formDetails.apiType === 'channels' &&
-            (formDetails.requestType === 'WA_template_variable' || formDetails.requestType === 'SMS_template')
+            formDetails.requestType === 'WA_plain_template'
         ) {
+                try {
+                    for (const project of formDetails.projects) {
+                        const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${formDetails.apiKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                "receiver": {
+                                    "contacts": [
+                                        {
+                                            "identifierValue": `${formDetails.identifierValue}`
+                                        }
+                                    ]
+                                },
+                                "template": {
+                                    "projectId": `${project.projectID}`, 
+                                    "version": `${project.versionID}`,   
+                                    "locale": `${formDetails.localeValue}`
+                                }}
+                            )});
+    
+                        if (!response.ok) {
+                            /*throw new Error('Network response was not ok');*/
+                            console.log(formDetails.workspaceId, formDetails.channelId, requestBody)
+                            
+                        }
+    
+                        const data = await response.json();
+                        console.log('Success:', data);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        /*-----------------------------------------------*/
+        else if (
+            formDetails.apiType === 'channels' &&
+            formDetails.requestType === 'WA_template_variable'
+        ) { 
+
             if (formDetails.projects.length > 0) {
                 formDetails.inputs.forEach(input => {
                     if (input.input1 && input.input2) {
@@ -348,8 +409,63 @@ document.addEventListener('DOMContentLoaded', function () {
                 } catch (error) {
                     console.error('Error:', error);
                 }
-            };
-
+            }
+            /*---------------------------------------------*/
+            else if (
+                formDetails.apiType === 'channels' &&
+                formDetails.requestType === 'WA_template_media'
+            ) {
+                if (formDetails.projects.length > 0) {
+                    formDetails.inputs.forEach(input => {
+                        if (input.input1 && input.input2) {
+                            requestBody[input.input1] = input.input2;
+                        }
+                    });
+                    console.log('Dynamic Request Body:', requestBody)
+                    try {
+                        for (const project of formDetails.projects) {
+                            const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${formDetails.apiKey}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    "receiver": {
+                                        "contacts": [
+                                            {
+                                                "identifierValue": `${formDetails.identifierValue}`
+                                            }
+                                        ]
+                                    },
+                                    "template": {
+                                        "projectId": `${project.projectID}`, 
+                                        "version": `${project.versionID}`,   
+                                        "locale": `${formDetails.localeValue}`,
+                                        "parameters": Object.entries(requestBody).map(([key, value]) => ({
+                                        "type": `${formDetails.mediaTypeSelection}`,
+                                        "key": key,
+                                        "value": value
+                                    }))
+                                    }
+                                })
+                            });
+                            /*PICK UP HERE*/
+        
+                            if (!response.ok) {
+                                /*throw new Error('Network response was not ok');*/
+                                console.log(formDetails.workspaceId, formDetails.channelId, requestBody)
+                                
+                            }
+        
+                            const data = await response.json();
+                            console.log('Success:', data);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                };
+            /*---------------------------------------------*/
             }
             else if(formDetails.requestType === "create_contact") {
                 formDetails.contacts.forEach(contact => {
@@ -388,4 +504,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     document.getElementById('submit').addEventListener('click', postForm);
-})
+}})

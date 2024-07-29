@@ -113,6 +113,7 @@
                             <small id="user-contact-id" class="form-text">Enter the contact ID</small>
                         </div>
                     </div>
+                    <!-- Comment Attr Div start-->
                     <div id="contact-attr-div" class="hidden">
                     <div class="row mb-3">
                         <label for="contact-identifier" class="col-2 form-label">Contact identifier</label>
@@ -143,6 +144,19 @@
                         </div>
                         <button type="button" class="btn btn-primary width-select" id="contacts-add-inputs-btn">Add More</button>
                     </div>
+                    </div>
+                    <!--Comment Atr Div End-->
+                    <div class="row mb-3 hidden" id="media-div">
+                        <label for="media" class="col-2 form-label">Media URL</label>
+                        <div class="col-6">
+                            <input class="form-control" aria-describedby="mediaHelp" placeholder="Enter the media Url" id="media_enter" name="media">
+                            <small id="media_url" class="form-text">Enter the media URL.</small>
+                            <select class="form-control" aria-describedby="apiHelp" id="media-type" name="mediaType">
+                                <option value="" disabled selected>Select media type</option>
+                                <option value="file">Audio/document/file</option>
+                                <option value="image">Image/sticker</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="row mb-3 hidden" id="webhook-div">
                         <label for="webhook-id" class="col-2 form-label">Enter the webhook ID</label>
