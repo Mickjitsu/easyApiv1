@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const dynamicInputsContainer = document.getElementById('dynamic-inputs-container');
     const dynamicProjectsContainer = document.getElementById('dynamic-projects-container');
     const addInputsBtn = document.getElementById('add-inputs-btn');
+    const contInputsBtn = document.getElementById('contacts-add-inputs-btn')
     const inputBoxesContainer = document.getElementById('input-boxes-container');
     let inputGroupCount = 1;
     const identifierType = document.getElementById('identifier-group')
@@ -28,10 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const webhookFilterValue = document.getElementById('webhook-event-filter-value');
     const webhookUrl = document.getElementById('webhook-url-enter');
     const contactIdentDiv = document.getElementById('contact-attr-div');
-    const dynamicContAttDiv = document.getElementById('dynamic-inputs-container-contacts');
-    const contactAttKeyInput= document.getElementById('contact-input-name')
-    const contAttValInput = document.getElementById('contact-input-value')
-
+    const contactIdentKey = document.getElementById('contact-key-enter');
+    const contactIdentValue = document.getElementById('contact-value-enter');
+    const dynamicContAttDiv = document.getElementById('contact-input-boxes-container');
+    const contactAttKeyInput= document.getElementById('contact-input-name');
+    const contAttValInput = document.getElementById('contact-input-value');
 
     apiSelect.addEventListener('change', function () {
         console.log('API Selection updated to:', this.value);
@@ -77,9 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     requestSelect.addEventListener('change', function () {
         const chosenRequest = this.value;
+        let input_value = ''
+        let input_name = ''
         if (chosenRequest === 'WA_template_variable' || chosenRequest === 'SMS_template') {
-            let input_name = '';
-            let input_value = '';
             dynamicInputsContainer.classList.remove('hidden');
             dynamicProjectsContainer.classList.remove('hidden');
             locale.classList.remove('hidden')
@@ -89,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function () {
             <input type="text" class="form-control" placeholder="Variable value" id="input-value">`;
             input_name = 'Variable Name';
             input_value = 'Variable Value';
-            inputButtonAddition(input_name, input_value);
         }
         else if(chosenRequest === 'WA_plain_text' || chosenRequest === 'SMS'){
             messageDiv.classList.remove('hidden')
@@ -106,9 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById("input-group-1-contacts").innerHTML = `
             <input type="text" class="form-control" placeholder="Attribute key" id="attribute-name">
             <input type="text" class="form-control" placeholder="Attribute value" id="attribute-value">`;
-            attribue_key = 'Attribute Key';
-            attribute_value = 'Attribute Value';
-            inputButtonAddition(attribute_key, attribute_value);
+            input_name = 'Attribute Key';
+            input_value = 'Attribute Value';
+        
         }
         else if(chosenRequest === "update_contact"){
             contactIdentDiv.classList.remove('hidden');
@@ -120,9 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById("input-group-1").innerHTML = `
             <input type="text" class="form-control" placeholder="Attribute key" id="attribute-name">
             <input type="text" class="form-control" placeholder="Attribute value" id="attribute-value">`;
-            attribue_key = 'Attribute Key';
+            attribute_key = 'Attribute Key';
             attribute_value = 'Attribute Value';
-            inputButtonAddition(attribute_key, attribute_value);
+            input_name = attribute_key;
+            input_value = attribute_value;
         }
         else if(chosenRequest === "get_webhook" || chosenRequest === "delete_webhook"){
             webhookDiv.classList.remove('hidden')
@@ -141,28 +143,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    function inputButtonAddition(input_name, input_value) {
-        addInputsBtn.addEventListener('click', function () {
-            inputGroupCount++;
+    // Correctly attach event listeners to buttons for adding input groups
+    addInputsBtn.addEventListener('click', function() {
+        addNewButton('Variable Name', 'Variable Value');
+    });
 
-            const newInputGroup = document.createElement('div');
-            newInputGroup.className = 'input-group mb-2';
+    contInputsBtn.addEventListener('click', function() {
+        addNewButton('Attribute Key', 'Attribute Value', true);
+    });
+
+    function addNewButton(input_name, input_value, isContact = false) {
+        inputGroupCount++;
+        const newInputGroup = document.createElement('div');
+        newInputGroup.className = 'input-group mb-2';
+
+        if (isContact) {
+            newInputGroup.id = `input-group-${inputGroupCount}-contacts`;
+        } else {
             newInputGroup.id = `input-group-${inputGroupCount}`;
+        }
 
-            const input1 = document.createElement('input');
-            input1.type = 'text';
-            input1.className = 'form-control';
-            input1.placeholder = `${input_name}`;
-            const input2 = document.createElement('input');
-            input2.type = 'text';
-            input2.className = 'form-control';
-            input2.placeholder = `${input_value}`;
+        const input1 = document.createElement('input');
+        input1.type = 'text';
+        input1.className = 'form-control';
+        input1.placeholder = input_name;
 
-            newInputGroup.appendChild(input1);
-            newInputGroup.appendChild(input2);
+        const input2 = document.createElement('input');
+        input2.type = 'text';
+        input2.className = 'form-control';
+        input2.placeholder = input_value;
 
+        newInputGroup.appendChild(input1);
+        newInputGroup.appendChild(input2);
+
+        if (isContact) {
+            dynamicContAttDiv.appendChild(newInputGroup);
+        } else {
             inputBoxesContainer.appendChild(newInputGroup);
-        });
+        }
     }
 
     function record_values() {
@@ -176,6 +194,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const messageContents = messageInput.value.trim();
         const localeValue = localeInput.value.trim();
         const contactId = contactInput.value.trim();
+        const contactIdentifierKey = contactIdentKey.value.trim();
+        const contactIdentifierValue = contactIdentValue.value.trim();
 
         const dynamicInputs = document.querySelectorAll('#input-boxes-container .input-group');
         const inputValues = [];
@@ -188,6 +208,19 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             inputValues.push(values);
         });
+
+        const dynamicContacts = document.querySelectorAll('#contact-input-boxes-container .input-group');
+        const contactAttValues = [];
+        dynamicContacts.forEach(group => {
+            const contactInputs = group.querySelectorAll('input');
+            if (contactInputs.length >= 2){
+            const attValues = {
+                attributeKey: contactInputs[0].value.trim(),
+                attributeValue: contactInputs[1].value.trim()
+            }
+            contactAttValues.push(attValues)
+        }
+        })
         const dynamicProjects = document.querySelectorAll('#project-boxes-container .project-group');
         const projectValues = [];
 
@@ -213,14 +246,17 @@ document.addEventListener('DOMContentLoaded', function () {
             messageContents,
             localeValue,
             contactId,
+            contactIdentifierKey,
+            contactIdentifierValue,
             inputs: inputValues,
             projects: projectValues,
+            contacts: contactAttValues
         };
         return formDetails;
     };
 
-    async function postForm() {
-        event.preventDefault()
+    async function postForm(event) {
+        event.preventDefault();
         const formDetails = record_values();
         let requestBody = {}
     
@@ -301,7 +337,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
     
                         if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                            /*throw new Error('Network response was not ok');*/
+                            console.log(formDetails.workspaceId, formDetails.channelId, requestBody)
                             
                         }
     
@@ -311,15 +348,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 } catch (error) {
                     console.error('Error:', error);
                 }
+            };
+
             }
-            else if(formDetails.requestType === 'create_contact') {
-                console.log('Awaiting API updates');
+            else if(formDetails.requestType === "create_contact") {
+                formDetails.contacts.forEach(contact => {
+                    if (contact.attributeKey && contact.attributeValue){
+                        requestBody[contact.attributeKey] = contact.attributeValue;
+                    }
+                });
+                const identifiers = [
+                    {
+                        "key": formDetails.contactIdentifierKey,
+                        "value": formDetails.contactIdentifierValue
+                    }
+                ];
+                requestBody.identifiers = identifiers;
+
+                try{
+                    const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/contacts`,{
+                        method: 'POST',
+                        headers:{
+                            'Authorization': `Bearer ${formDetails.apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                };
+                const data = await response.json();
+                console.log('Success:', data);
+            } catch (error) {
+                console.error('Error:', error);
             }
-            else {
-                console.log('No project values provided.');
-            }
-        } else {
-            console.log('Awaiting API updates');
+        } else{
+            console.log('Unsuccessful')
         }
     }
     
