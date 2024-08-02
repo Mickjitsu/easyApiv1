@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         return formDetails;
     };
-
+    document.getElementById('submit').addEventListener('click', postForm);
     async function postForm(event) {
         event.preventDefault();
         const formDetails = record_values();
@@ -502,6 +502,4 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Unsuccessful')
         }
     }
-    
-    document.getElementById('submit').addEventListener('click', postForm);
 }})
