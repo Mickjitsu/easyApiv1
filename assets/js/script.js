@@ -347,27 +347,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 ];
                 requestBody.identifiers = identifiers;
+                createContact(requestBody, formDetails.workspaceId, formDetails.apiKey)
 
-                try{
-                    const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/contacts`,{
-                        method: 'POST',
-                        headers:{
-                            'Authorization': `Bearer ${formDetails.apiKey}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestBody)
-                });
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                };
-                const data = await response.json();
-                console.log('Success:', data);
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        } else{
-            console.log('Unsuccessful')
-        }
+                
     }
 
 async function sendChannelPlainText(workspaceId, channelId, apiKey, identValue, messageContent){
@@ -590,4 +572,26 @@ async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKe
                         console.error('Error:', error);
                     }
 }
+
+async function createContact(requestBody, workspaceId, apiKey){
+    try{
+        const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/contacts`,{
+            method: 'POST',
+            headers:{
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+    });
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    };
+    const data = await response.json();
+    console.log('Success:', data);
+} catch (error) {
+    console.error('Error:', error);
+
+}
+}
+    }
 })
