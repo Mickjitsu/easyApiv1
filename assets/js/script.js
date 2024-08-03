@@ -299,50 +299,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 formDetails.inputs.forEach(input => {
                     if (input.input1 && input.input2) {
                         requestBody[input.input1] = input.input2;
+                        sendWaTemplateVar(formDetails.workspaceId, formDetails.channelId, requestBody, formDetails.apiKey, formDetails.identifierValue, formDetails.projects, formDetails.localeValue);
                     }
                 });
-                console.log('Dynamic Request Body:', requestBody)
-                try {
-                    for (const project of formDetails.projects) {
-                        const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${formDetails.apiKey}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                "receiver": {
-                                    "contacts": [
-                                        {
-                                            "identifierValue": `${formDetails.identifierValue}`
-                                        }
-                                    ]
-                                },
-                                "template": {
-                                    "projectId": `${project.projectID}`, 
-                                    "version": `${project.versionID}`,   
-                                    "locale": `${formDetails.localeValue}`,
-                                    "parameters": Object.entries(requestBody).map(([key, value]) => ({
-                                    "type": "string",
-                                    "key": key,
-                                    "value": value
-                                }))
-                                }
-                            })
-                        });
-    
-                        if (!response.ok) {
-                            /*throw new Error('Network response was not ok');*/
-                            console.log(formDetails.workspaceId, formDetails.channelId, requestBody)
-                            
-                        }
-    
-                        const data = await response.json();
-                        console.log('Success:', data);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
             }
             /*---------------------------------------------*/
             else if (
@@ -501,6 +460,51 @@ async function sendWaPlainTemplate(workspaceId, channelId, apiKey, identValue, l
             if (!response.ok) {
                 /*throw new Error('Network response was not ok');*/
                 console.log(workspaceId, channelId, apiKey, identValue, locale, projects)
+                
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function sendWaTemplateVar(workspaceId, channelId, requestBody, apiKey, identValue, projects, locale){
+    console.log('Dynamic Request Body:', requestBody)
+    try {
+        for (const project of projects) {
+            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "receiver": {
+                        "contacts": [
+                            {
+                                "identifierValue": `${identValue}`
+                            }
+                        ]
+                    },
+                    "template": {
+                        "projectId": `${project.projectID}`, 
+                        "version": `${project.versionID}`,   
+                        "locale": `${locale}`,
+                        "parameters": Object.entries(requestBody).map(([key, value]) => ({
+                        "type": "string",
+                        "key": key,
+                        "value": value
+                    }))
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                /*throw new Error('Network response was not ok');*/
+                console.log(workspaceId, channelId, requestBody)
                 
             }
 
