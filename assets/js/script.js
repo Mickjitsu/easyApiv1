@@ -280,80 +280,14 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Form Details:', formDetails);
     
         if (formDetails.apiType === 'channels' && (formDetails.requestType === 'WA_plain_text' || formDetails.requestType === 'SMS')) {
-            try {
-                const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${formDetails.apiKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "receiver": {
-                            "contacts": [
-                                {
-                                    "identifierValue": `${formDetails.identifierValue}`
-                                }
-                            ]
-                        },
-                        "body": {
-                            "type": "text",
-                            "text": {
-                                "text": `${formDetails.messageContents}`
-                            }
-                        }
-                    })
-                });
-    
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-    
-                const data = await response.json();
-                console.log('Success:', data);
-            } catch (error) {
-                console.error('Error:', error);
-            }
+            sendChannelPlainText(formDetails.workspaceId, formDetails.channelId, formDetails.apiKey, formDetails.identifierValue, formDetails.messageContents)
         }
         /*----------------------------------------------*/
         else if (
             formDetails.apiType === 'channels' &&
             formDetails.requestType === 'WA_plain_template'
         ) {
-                try {
-                    for (const project of formDetails.projects) {
-                        const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${formDetails.apiKey}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                "receiver": {
-                                    "contacts": [
-                                        {
-                                            "identifierValue": `${formDetails.identifierValue}`
-                                        }
-                                    ]
-                                },
-                                "template": {
-                                    "projectId": `${project.projectID}`, 
-                                    "version": `${project.versionID}`,   
-                                    "locale": `${formDetails.localeValue}`
-                                }}
-                            )});
-    
-                        if (!response.ok) {
-                            /*throw new Error('Network response was not ok');*/
-                            console.log(formDetails.workspaceId, formDetails.channelId, requestBody)
-                            
-                        }
-    
-                        const data = await response.json();
-                        console.log('Success:', data);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
+            sendWaPlainTemplate(formDetails.workspaceId, formDetails.channelId, formDetails.apiKey, formDetails.identifierValue, formDetails.localeValue, formDetails.projects)
             }
         /*-----------------------------------------------*/
         else if (
@@ -502,4 +436,79 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Unsuccessful')
         }
     }
-}})
+}
+
+async function sendChannelPlainText(workspaceId, channelId, apiKey, identValue, messageContent){
+    try {
+        const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "receiver": {
+                    "contacts": [
+                        {
+                            "identifierValue": `${identValue}`
+                        }
+                    ]
+                },
+                "body": {
+                    "type": "text",
+                    "text": {
+                        "text": `${messageContent}`
+                    }
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log('Success:', data);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function sendWaPlainTemplate(workspaceId, channelId, apiKey, identValue, locale, projects){
+    try {
+        for (const project of projects) {
+            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "receiver": {
+                        "contacts": [
+                            {
+                                "identifierValue": `${identValue}`
+                            }
+                        ]
+                    },
+                    "template": {
+                        "projectId": `${project.projectID}`, 
+                        "version": `${project.versionID}`,   
+                        "locale": `${locale}`
+                    }}
+                )});
+
+            if (!response.ok) {
+                /*throw new Error('Network response was not ok');*/
+                console.log(workspaceId, channelId, apiKey, identValue, locale, projects)
+                
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+})
