@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     requestSelect.addEventListener('change', function () {
         const chosenRequest = this.value;
+        console.log(chosenRequest)
         let input_value = ''
         let input_name = ''
         if (chosenRequest === 'WA_template_variable' || chosenRequest === 'SMS_template') {
@@ -123,6 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
             waMediaDiv.classList.remove('hidden');
             dynamicProjectsContainer.classList.remove('hidden');
             locale.classList.remove('hidden');
+            dynamicInputsContainer.classList.remove('hidden');
         }
         else if(chosenRequest === "update_contact"){
             contactIdentDiv.classList.remove('hidden');
@@ -263,14 +265,16 @@ document.addEventListener('DOMContentLoaded', function () {
             contactId,
             contactIdentifierKey,
             contactIdentifierValue,
-            waMediaInput,
+            waMediaUrl,
             mediaTypeSelection,
             inputs: inputValues,
             projects: projectValues,
             contacts: contactAttValues
         };
         return formDetails;
+        console.log(requestType);
     };
+
     document.getElementById('submit').addEventListener('click', postForm);
     async function postForm(event) {
         event.preventDefault();
@@ -278,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let requestBody = {}
     
         console.log('Form Details:', formDetails);
+        console.log(formDetails.requestType, formDetails.mediaTypeSelection, formDetails.waMediaUrl)
     
         if (formDetails.apiType === 'channels' && (formDetails.requestType === 'WA_plain_text' || formDetails.requestType === 'SMS')) {
             sendChannelPlainText(formDetails.workspaceId, formDetails.channelId, formDetails.apiKey, formDetails.identifierValue, formDetails.messageContents)
@@ -303,63 +308,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }
+        }
             /*---------------------------------------------*/
             else if (
-                formDetails.apiType === 'channels' &&
                 formDetails.requestType === 'WA_template_media'
             ) {
-                if (formDetails.projects.length > 0) {
+                console.log(formDetails.requestType)
+                if (formDetails.inputs.length > 0) {
                     formDetails.inputs.forEach(input => {
-                        if (input.input1 && input.input2) {
+                        console.log('Input:', input);
+                        if (!input.input1 || !input.input2) {
+                       sendWaTemplateMedia(formDetails.workspaceId, formDetails.channelId, formDetails.apiKey, formDetails.identifierValue, formDetails.projects, formDetails.localeValue, formDetails.waMediaUrl, formDetails.mediaTypeSelection)
+                       console.log('There are no inputs')
+                    }
+                        else if (input.input1 && input.input2) {
                             requestBody[input.input1] = input.input2;
+                            sendWaTemplateMediaVar(formDetails.workspaceId, formDetails.channelId, requestBody, formDetails.apiKey, formDetails.identifierValue, formDetails.projects, formDetails.localeValue, formDetails.waMediaUrl,
+                                formDetails.mediaTypeSelection);
+                                console.log('There are inputs')
                         }
                     });
-                    console.log('Dynamic Request Body:', requestBody)
-                    try {
-                        for (const project of formDetails.projects) {
-                            const response = await fetch(`https://api.bird.com/workspaces/${formDetails.workspaceId}/channels/${formDetails.channelId}/messages`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${formDetails.apiKey}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    "receiver": {
-                                        "contacts": [
-                                            {
-                                                "identifierValue": `${formDetails.identifierValue}`
-                                            }
-                                        ]
-                                    },
-                                    "template": {
-                                        "projectId": `${project.projectID}`, 
-                                        "version": `${project.versionID}`,   
-                                        "locale": `${formDetails.localeValue}`,
-                                        "parameters": Object.entries(requestBody).map(([key, value]) => ({
-                                        "type": `${formDetails.mediaTypeSelection}`,
-                                        "key": key,
-                                        "value": value
-                                    }))
-                                    }
-                                })
-                            });
-                            /*PICK UP HERE*/
-        
-                            if (!response.ok) {
-                                /*throw new Error('Network response was not ok');*/
-                                console.log(formDetails.workspaceId, formDetails.channelId, requestBody)
-                                
-                            }
-        
-                            const data = await response.json();
-                            console.log('Success:', data);
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
-                };
-            /*---------------------------------------------*/
+                }
+                else{
+                    console.log('Error')
+                }
             }
+            /*---------------------------------------------*/
             else if(formDetails.requestType === "create_contact") {
                 formDetails.contacts.forEach(contact => {
                     if (contact.attributeKey && contact.attributeValue){
@@ -395,7 +369,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Unsuccessful')
         }
     }
-}
 
 async function sendChannelPlainText(workspaceId, channelId, apiKey, identValue, messageContent){
     try {
@@ -514,5 +487,107 @@ async function sendWaTemplateVar(workspaceId, channelId, requestBody, apiKey, id
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+async function sendWaTemplateMedia(workspaceId, channelId, apiKey, identValue, projects, locale, waMediaInput,
+    mediaTypeSelection){
+        let mediaParam =''
+        if (mediaTypeSelection === 'image'){
+            mediaParam = 'imageUrl'
+        } else {
+            mediaParam = 'fileUrl'
+        }
+                    try {
+                        for (const project of projects) {
+                            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${apiKey}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    "receiver": {
+                                        "contacts": [
+                                            {
+                                                "identifierValue": `${identValue}`
+                                            }
+                                        ]
+                                    },
+                                    "template": {
+                                        "projectId": `${project.projectID}`, 
+                                        "version": `${project.versionID}`,   
+                                        "locale": `${locale}`,
+                                        "parameters":[
+                                            {
+                                                "type": "string",
+                                                "key": `${mediaType}`,
+                                                "value": `${waMediaInput}`
+                                            }
+                                        ]
+                                    },
+                                        
+                                    })
+                            });
+                            /*PICK UP HERE*/
+        
+                            if (!response.ok) {
+                                /*throw new Error('Network response was not ok');*/
+                                console.log(workspaceId, channelId)
+                                
+                            }
+        
+                            const data = await response.json();
+                            console.log('Success:', data);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+};
+async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKey, identValue, projects, locale, waMediaInput,
+    mediaTypeSelection){
+    console.log('Dynamic Request Body:', requestBody)
+                    try {
+                        for (const project of projects) {
+                            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${apiKey}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    "receiver": {
+                                        "contacts": [
+                                            {
+                                                "identifierValue": `${identValue}`
+                                            }
+                                        ]
+                                    },
+                                    "template": {
+                                        "projectId": `${project.projectID}`, 
+                                        "version": `${project.versionID}`,   
+                                        "locale": `${locale}`,
+
+                                        "parameters": Object.entries(requestBody).map(([key, value]) => ({
+                                        "type": `${mediaTypeSelection}`,
+                                        "key": key,
+                                        "value": value
+                                    }))
+                                    }
+                                })
+                            });
+                            /*PICK UP HERE*/
+        
+                            if (!response.ok) {
+                                /*throw new Error('Network response was not ok');*/
+                                console.log(workspaceId, channelId, requestBody)
+                                
+                            }
+        
+                            const data = await response.json();
+                            console.log('Success:', data);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
 }
 })
