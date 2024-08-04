@@ -525,52 +525,62 @@ async function sendWaTemplateMedia(workspaceId, channelId, apiKey, identValue, p
                         console.error('Error:', error);
                     }
 };
-async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKey, identValue, projects, locale, waMediaInput,
-    mediaTypeSelection){
-    console.log('Dynamic Request Body:', requestBody)
-                    try {
-                        for (const project of projects) {
-                            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${apiKey}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    "receiver": {
-                                        "contacts": [
-                                            {
-                                                "identifierValue": `${identValue}`
-                                            }
-                                        ]
-                                    },
-                                    "template": {
-                                        "projectId": `${project.projectID}`, 
-                                        "version": `${project.versionID}`,   
-                                        "locale": `${locale}`,
-
-                                        "parameters": Object.entries(requestBody).map(([key, value]) => ({
-                                        "type": `${mediaTypeSelection}`,
-                                        "key": key,
-                                        "value": value
-                                    }))
-                                    }
-                                })
-                            });
-                            /*PICK UP HERE*/
-        
-                            if (!response.ok) {
-                                /*throw new Error('Network response was not ok');*/
-                                console.log(workspaceId, channelId, requestBody)
-                                
+async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKey, identValue, projects, locale, waMediaInput, mediaTypeSelection) {
+    let mediaParam = '';
+    if (mediaTypeSelection === 'image') {
+        mediaParam = 'imageUrl';
+    } else {
+        mediaParam = 'fileUrl';
+    }
+    
+    console.log('Dynamic Request Body:', requestBody);
+    
+    try {
+        for (const project of projects) {
+            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "receiver": {
+                        "contacts": [
+                            {
+                                "identifierValue": `${identValue}`
                             }
-        
-                            const data = await response.json();
-                            console.log('Success:', data);
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
+                        ]
+                    },
+                    "template": {
+                        "projectId": `${project.projectID}`,
+                        "version": `${project.versionID}`,
+                        "locale": `${locale}`,
+                        "parameters": [
+                            ...Object.entries(requestBody).map(([key, value]) => ({
+                                "type": "string",
+                                "key": key,
+                                "value": value
+                            })),
+                            {
+                                "type": "string",
+                                "key": mediaParam,
+                                "value": `${waMediaInput}`
+                            }
+                        ]
                     }
+                })
+            });
+
+            if (!response.ok) {
+                console.log(workspaceId, channelId, requestBody);
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
 async function createContact(requestBody, workspaceId, apiKey){
