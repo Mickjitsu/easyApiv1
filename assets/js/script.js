@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const waMediaDiv = document.getElementById("media-div");
     const waMediaInput = document.getElementById('media_enter');
     const mediaType = document.getElementById('media-type');
+    const mediaVarName = document.getElementById('media_var_enter');
 
     apiSelect.addEventListener('change', function () {
         console.log('API Selection updated to:', this.value);
@@ -212,7 +213,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const contactIdentifierKey = contactIdentKey.value.trim();
         const contactIdentifierValue = contactIdentValue.value.trim();
         const waMediaUrl = waMediaInput.value.trim();
-        const mediaTypeSelection = mediaType.value.trim()
+        const mediaTypeSelection = mediaType.value.trim();
+        const mediaVariableName = mediaVarName.value.trim();
 
         const dynamicInputs = document.querySelectorAll('#input-boxes-container .input-group');
         const inputValues = [];
@@ -267,6 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
             contactIdentifierValue,
             waMediaUrl,
             mediaTypeSelection,
+            mediaVariableName,
             inputs: inputValues,
             projects: projectValues,
             contacts: contactAttValues
@@ -318,13 +321,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     formDetails.inputs.forEach(input => {
                         console.log('Input:', input);
                         if (!input.input1 || !input.input2) {
-                       sendWaTemplateMedia(formDetails.workspaceId, formDetails.channelId, formDetails.apiKey, formDetails.identifierValue, formDetails.projects, formDetails.localeValue, formDetails.waMediaUrl, formDetails.mediaTypeSelection)
+                       sendWaTemplateMedia(formDetails.workspaceId, formDetails.channelId, formDetails.apiKey, formDetails.identifierValue, formDetails.projects, formDetails.localeValue, formDetails.waMediaUrl, formDetails.mediaTypeSelection, formDetails.mediaVariableName)
                        console.log('There are no inputs')
                     }
                         else if (input.input1 && input.input2) {
                             requestBody[input.input1] = input.input2;
                             sendWaTemplateMediaVar(formDetails.workspaceId, formDetails.channelId, requestBody, formDetails.apiKey, formDetails.identifierValue, formDetails.projects, formDetails.localeValue, formDetails.waMediaUrl,
-                                formDetails.mediaTypeSelection);
+                                formDetails.mediaTypeSelection, formDetails.mediaVariableName);
                                 console.log('There are inputs')
                         }
                     });
@@ -472,7 +475,7 @@ async function sendWaTemplateVar(workspaceId, channelId, requestBody, apiKey, id
 }
 
 async function sendWaTemplateMedia(workspaceId, channelId, apiKey, identValue, projects, locale, waMediaInput,
-    mediaTypeSelection){
+    mediaTypeSelection, mediaVariableName){
         let mediaParam =''
         if (mediaTypeSelection === 'image'){
             mediaParam = 'imageUrl'
@@ -502,7 +505,7 @@ async function sendWaTemplateMedia(workspaceId, channelId, apiKey, identValue, p
                                         "parameters":[
                                             {
                                                 "type": "string",
-                                                "key": `${mediaType}`,
+                                                "key": mediaVariableName,
                                                 "value": `${waMediaInput}`
                                             }
                                         ]
@@ -525,26 +528,17 @@ async function sendWaTemplateMedia(workspaceId, channelId, apiKey, identValue, p
                         console.error('Error:', error);
                     }
 };
-async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKey, identValue, projects, locale, waMediaInput, mediaTypeSelection) {
+async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKey, identValue, projects, locale, waMediaInput, mediaTypeSelection, mediaVariableName) {
     let mediaParam = '';
     if (mediaTypeSelection === 'image') {
         mediaParam = 'imageUrl';
     } else {
         mediaParam = 'fileUrl';
-    }
-    
-    console.log('Dynamic Request Body:', requestBody);
-    
-    try {
-        for (const project of projects) {
-            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    "receiver": {
+    };
+    let requestBodyJson = ''
+    for (const project of projects) {
+    requestBodyJson = JSON.stringify({
+        "receiver": {
                         "contacts": [
                             {
                                 "identifierValue": `${identValue}`
@@ -563,12 +557,23 @@ async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKe
                             })),
                             {
                                 "type": "string",
-                                "key": mediaParam,
+                                "key": mediaVariableName,
                                 "value": `${waMediaInput}`
                             }
                         ]
                     }
-                })
+    })}
+    console.log('Dynamic Request Body:', requestBody);
+    
+    try {
+        for (const project of projects) {
+            const response = await fetch(`https://api.bird.com/workspaces/${workspaceId}/channels/${channelId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: requestBodyJson
             });
 
             if (!response.ok) {
@@ -581,6 +586,7 @@ async function sendWaTemplateMediaVar(workspaceId, channelId, requestBody, apiKe
     } catch (error) {
         console.error('Error:', error);
     }
+    console.log(requestBodyJson)
 }
 
 async function createContact(requestBody, workspaceId, apiKey){
