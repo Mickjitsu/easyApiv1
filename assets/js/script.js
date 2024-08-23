@@ -59,22 +59,18 @@ document.addEventListener('DOMContentLoaded', function () {
             <option value="SMS_image">Send SMS image</option>
             <option value="SMS_image_text">Send SMS with image and text</option>
             <option value="SMS_file">Send SMS with file</option>
-            <option value="SMS_template">Send SMS template</option>`;
+            <option value="SMS_template">Send SMS template</option>
+            <option value="email_template">Send Email template</option>
+            <option value="email_plain">Send Email Message</option>`;
         } else if (selectedApi === 'contacts') {
             requestSelect.innerHTML = `
             <option value="" disabled selected>Choose Contact API Request</option>
-            <option value="list_contacts">List contacts</option>
             <option value="create_contact">Create Contact</option>
-            <option value="get_contact">Get contact</option>
-            <option value="delete_contact">Delete Contact</option>
             <option value="update_contact">Create or Update contact by identifier</option>`;
         } else if (selectedApi === 'webhooks') {
             requestSelect.innerHTML = `
             <option value="" disabled selected>Choose webhook subscription request</option>
             <option value="create_webhook">Create Subscription</option>
-            <option value="list_webhooks">List webhook events</option>
-            <option value="delete_webhook">Delete Subscription</option>
-            <option value="get_webhook">Get webhook Subscription</option>
             <option value="update_webhook">Update webhook Subscription</option>`;
         } else {
             requestSelect.innerHTML = `
@@ -104,10 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
         else if(chosenRequest === 'WA_plain_template' && chosenRequest != 'Wa_plain_text'){
             dynamicProjectsContainer.classList.remove('hidden');
             locale.classList.remove('hidden');
-        }
-        else if(chosenRequest === "get_contact" || chosenRequest === "delete_contact"){
-            contactDiv.classList.remove('hidden');
-            contactIdentDiv.classList.add('hidden');
         }
         else if(chosenRequest === "create_contact"){
             let attribute_key = '';
@@ -141,10 +133,6 @@ document.addEventListener('DOMContentLoaded', function () {
             attribute_value = 'Attribute Value';
             input_name = attribute_key;
             input_value = attribute_value;
-        }
-        else if(chosenRequest === "get_webhook" || chosenRequest === "delete_webhook"){
-            webhookDiv.classList.remove('hidden')
-            webhookAtrDiv.classList.add('hidden')
         }
         else if(chosenRequest === "update_webhook" || chosenRequest === "create_webhook"){
             webhookDiv.classList.remove('hidden')
